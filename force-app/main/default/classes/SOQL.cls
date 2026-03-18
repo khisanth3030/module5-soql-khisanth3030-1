@@ -46,7 +46,7 @@ public with sharing class SOQL {
 	//  The body of the method
 	//}
 	public static List<Contact> getContactsByFirstName() {
-		List<Contact> contacts = [SELECT Id, Name FROM Contact WHERE FirstName = 'John'];
+		List<Contact> contacts = [SELECT Id, Name FROM Contact WHERE FirstName = 'John'];		
 		return contacts;
 	}
 
@@ -57,10 +57,16 @@ public with sharing class SOQL {
 	 * @return A list of Contact Ids.
 	 * Update the corresponding test class and testGetContactIdsByLastName method to cover this method
 	 */
-	//[public | private ] [static] data_type method_name (input parameters) {
-	//  The body of the method
-	//}
 
+	public static List<Id> getContactIdsByLastName() {
+		List<Contact> contactList = [SELECT Id FROM Contact WHERE LastName IN ('Smith', 'Jones')];
+		List<Id> contactIds = new List<Id>();
+		for(Contact con : contactList) {
+			contactIds.add(con.Id);
+		}
+		return contactIds;
+
+	}
 	/**
 	 * Question 4
 	 * Update/Uncomment the template code to create a method
