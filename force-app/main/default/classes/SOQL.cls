@@ -129,12 +129,15 @@ public with sharing class SOQL {
 	/**
 	 * Question 8
 	 * Retrieves all Opportunities that have a specific keyword in their Name.
-	 * Example: getOpportunitiesByNameKeyword('keyword') should return all Opportunities that have 'keyword' in their Name.
+	 * Example: getOpportunitiesByNameKeyword('keyword') should return all Opportunities that have a string they look for in their Name.
 	 * @param keyword The keyword to search for in the Opportunity Name.
 	 * @return A list of Opportunity records.
 	 */
 	public static List<Opportunity> getOpportunitiesByNameKeyword(String keyword) {
-		return null; // Replace null with the variable you used to store the result
+		List<Opportunity> result = new List<Opportunity>();
+		String keyMatch = '%' + keyword + '%';
+		result = [SELECT Id, Name FROM Opportunity WHERE Name LIKE :keyMatch];
+		return result;
 	}
 
 	/**
@@ -143,7 +146,9 @@ public with sharing class SOQL {
 	 * @return A list of Case records.
 	 */
 	public static List<Case> getFilterCaseOrigins() {
-		return null; // Replace null with the variable you used to store the result
+		List<Case> result = new List<Case>();
+		result = [SELECT Id, Origin FROM Case WHERE Origin NOT IN ('Web', 'Email')];
+		return result; // Replace null with the variable you used to store the result
 	}
 
 	/**
