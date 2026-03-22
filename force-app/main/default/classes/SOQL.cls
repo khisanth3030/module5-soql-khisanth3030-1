@@ -346,20 +346,26 @@ public with sharing class SOQL {
 	 * @return A list of Accounts with matching email domains.
 	 */
 	public static List<Account> findAccountsByLeadEmailDomains(Set<Id> leadIds) {
+		List<Account> result = new List<Account>();
 		// Query the Leads
-
+		List<Lead> leads = [SELECT Id, Email FROM Lead WHERE Id IN :leadIds];
 		// Create a set of email domains from the Leads
-
+		Set<String> emailDomains = new Set<String>();
 		// Loop through each Lead
+		for (Lead l : leads) {
+			// Get the email from the Lead
+			String email = l.Email;
+			// Check if the email is not null
+			if (email != null) {
+				// Add the email domain to the set
+				emailDomains.add(email.substringAfter('@'));
+			}
+		}		
+		// Query the Accounts		
+		result = [SELECT Id, Name, Website 
+		FROM Account WHERE Website IN :emailDomains];
 
-		// Get the email from the Lead
-
-		// Check if the email is not null
-
-		// Add the email domain to the set
-
-		// Query the Accounts
-		return null; // Replace null with the variable you used to store the result
+		return result; 
 	}
 
 	/**
@@ -372,18 +378,27 @@ public with sharing class SOQL {
 	 */
 	public static void cloneLineItems(Id origOppId, List<Id> cloneOppIds) {
 		// Query the original Opportunity Line Items
-
+		List<OpportunityLineItem> origLineItems = [SELECT Id, Quantity, OpportunityId FROM OpportunityLineItem WHERE OpportunityId = :origOppId];
 		// Create a list to hold the new line items
-
+		List<OpportunityLineItem> newLineItems = new List<OpportunityLineItem>();
 		// Generate a random number between 1 and 3
+		Integer randomNumber = Math.round(Math.random() * 2) + 1;
+		
+				// Loop through Set of cloned Opportunity Id
+				for(Id cloneOppId : cloneOppIds) {
 
-		// Loop through each cloned Opportunity Id
-
-		// Loop through each original line item
-
-		// Clone the original line item and add the random number to the quantity
-
-		// Insert the new line items
+					// Loop through all original line item
+					for(OpportunityLineItem origLineItem : origLineItems) {
+		
+						// Clone the original line item and add the random number to the quantity
+						OpportunityLineItem newLineItem = origLineItem.clone(false, true, false, false);
+						newLineItem.OpportunityId = cloneOppId;
+						newLineItem.Quantity = randomNumber;
+						newLineItems.add(newLineItem);
+					}
+				}
+			// Insert the new line items
+			insert newLineItems;		
 	}
 
 	/**
@@ -392,7 +407,10 @@ public with sharing class SOQL {
 	 * @return A list of filtered Opportunity
 	 */
 	public static List<Opportunity> getOpportunityDetailsForClosedWon() {
-		return null; // Replace null with the variable you used to store the result
+		List<Opportunity> result = new List<Opportunity>();
+		result = [SELECT Id, Name, Account.Name, Owner.Name FROM Opportunity 
+					WHERE StageName = 'Closed Won'];
+		return result; 
 	}
 
 	/**
@@ -402,17 +420,29 @@ public with sharing class SOQL {
 	 */
 	public static void setPrimaryContact() {
 		//Use the getOpportunityDetailsForClosedWon() method to get the Opportunities
-
+		List<Opportunity> opportunities = getOpportunityDetailsForClosedWon();
 		// Create a set of Account Ids from the Opportunities
-
+		Set<Id> accountIds = new Set<Id>();
+		for (Opportunity opp : opportunities) {
+			accountIds.add(opp.AccountId);
+		}
 		// Query the Contacts
-
+		List<Contact> contacts = [SELECT Id, FirstName, AccountId 
+		FROM Contact WHERE AccountId IN :accountIds];
 		// Loop through each Contact and add the Account Id and Contact to the map
-
+		Map<Id, Contact> accountToContactMap = new Map<Id, Contact>();
+		for (Contact con : contacts) {
+			accountToContactMap.put(con.AccountId, con);
+			}		
 		// Loop through each Opportunity
-
-		// Update the Opportunity primary contact from accountToContactMap
-
+		for (Opportunity opp : opportunities) {
+			// Get the Account Id from the Opportunity
+			Id accountId = opp.AccountId;
+			// Update the Opportunity primary contact from accountToContactMap
+			opp.Primary_Contact__c = accountToContactMap.get(accountId).Id;
+		}
 		// Update the Opportunities
+		upsert opportunities;
+
 	}
 }
